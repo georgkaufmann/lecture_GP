@@ -1,7 +1,7 @@
-# Lecture Numerical methods
+# Lecture Geophysikalisches Geländepraktikum
   
-This course material is used alongside the Numerical Methods lecture
-from the M.Sc. Geological Sciences at the Freie Universität Berlin.
+This course material is used alongside the GP lecture
+from the B.Sc. Geological Sciences at the Freie Universität Berlin.
 
 
 ## Getting Started
@@ -9,16 +9,17 @@ from the M.Sc. Geological Sciences at the Freie Universität Berlin.
 ## Contents
 
 - data     - data files as examples
+- images   - images used for notebooks
 - \*.ipynb - jupuyter notebook
 
 ## Download
 ```
-git clone https://github.com/georgkaufmann/lecture_numerics.git
+git clone https://github.com/georgkaufmann/lecture_GP.git
 ```
 
 ## Run interactively with binder
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/georgkaufmann/lecture_numerics.git/master?filepath=index.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/georgkaufmann/lecture_GP.git/master?filepath=index.ipynb)
 
 ## Versioning
 
