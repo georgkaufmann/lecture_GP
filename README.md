@@ -1,4 +1,4 @@
-# Lecture Geophysikalisches Geländepraktikum
+# Lecture Geophysikalische Geländearbeit
   
 This course material is used alongside the GP lecture
 from the B.Sc. Geological Sciences at the Freie Universität Berlin.

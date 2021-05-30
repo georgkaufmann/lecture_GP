@@ -2,5 +2,6 @@ PAT
 *.png
 *.xy
 Untitled*.ipynb
+*noshow.ipynb
 gis/
 test/
