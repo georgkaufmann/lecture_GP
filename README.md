@@ -19,7 +19,7 @@ git clone https://github.com/georgkaufmann/lecture_GP.git
 
 ## Run interactively with binder
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/georgkaufmann/lecture_GP.git/master?filepath=index.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/georgkaufmann/lecture_GP.git/main?filepath=index.ipynb)
 
 ## Versioning
 
