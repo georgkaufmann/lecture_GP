@@ -4,3 +4,4 @@ Untitled*.ipynb
 *noshow.ipynb
 gis/
 test/
+!data/*.xy
