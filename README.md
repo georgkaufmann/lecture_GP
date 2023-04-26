@@ -21,9 +21,6 @@ git clone https://github.com/georgkaufmann/lecture_GP.git
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/georgkaufmann/jupyter/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fgeorgkaufmann%252Flecture_GP%26urlpath%3Dlab%252Ftree%252Flecture_GP%252Findex.ipynb%26branch%3Dmain)
 
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/georgkaufmann/lecture_GP.git/main?filepath=index.ipynb)
-
 ## Versioning
 
 We use [Git](https://git-scm.com/) for versioning.
