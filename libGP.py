@@ -334,8 +334,6 @@ def readERTprofile(fileERT,path='./',control=False,plot=False):
         List of profile, offset [m]
     tri : object
         trianulation object
-    total : 1D numpy array
-        List of total-field values [m]
 
     Notes
     -----
@@ -343,7 +341,7 @@ def readERTprofile(fileERT,path='./',control=False,plot=False):
     Raises
     ------
     ValueError
-        if path/fileMAG does not exist, aborts
+        if path/fileERT does not exist, aborts
     """
     import numpy as np
     import os.path, sys
@@ -384,14 +382,11 @@ def readERTprofile(fileERT,path='./',control=False,plot=False):
             print('min/max offset:            ',ert[:,3].min(),ert[:,3].max())
             print('min/max resistivity:       ',ert[:,4].min(),ert[:,4].max())
             print('min/max profile:           ',ert[:,5].min(),ert[:,5].max())
-            print(ert.shape)
         # triangulation points
         points = np.zeros(ert.shape[0]*2).reshape(ert.shape[0],2)
         for i in range(ert.shape[0]):
             points[i][0] = ert[i,5]
             points[i][1] = ert[i,3]
-        if (control):
-            print(points.shape)
         # Delaunay triangulation 
         tri = scipy.spatial.Delaunay(points)
         # plot profile
@@ -416,6 +411,122 @@ def readERTprofile(fileERT,path='./',control=False,plot=False):
             cbar1=fig.colorbar(im1,ax=ax1,shrink=0.9,ticks=[10,20,50,100,200,500,1000,5000],format=formatter)
             cbar1.set_label('Specific resistivity [\u03A9'+'m]', rotation=90)
         return ert,points,tri
+
+#================================#
+def readGPRprofile(fileGPR,path='./',iskip=1,control=False,plot=False,reversed=False,scale=5e5,xoffset=0.):
+    """
+    Read GPR data data from geodyn5 file
+
+    Parameters
+    ----------
+    fileGPR : str
+        Full name of input file (in geodyn5 format)
+    path : str 
+        Path to input file, default: ./
+    iskip : int
+        Read in only iskip line, default: 1
+    control : bool
+        Control output, default: None
+    plot : bool
+        plot map, default: None
+    reversed : bool
+        reverse xprofile direction, default: no
+    scale : float
+        scale reflection amplitude, default: 5e5
+    xoffset : float
+        offset for profile, default: 0 m
+
+    Returns
+    -------
+    gpr : 2D numpy array
+        List of easting, northing, elevation, offset [m], amplitude [-], profile [m]
+    points : 2D numpy array
+        List of profile, offset [m]
+    tri : object
+        trianulation object
+    total : 1D numpy array
+        List of total-field values [m]
+
+    Notes
+    -----
+
+    Raises
+    ------
+    ValueError
+        if path/fileGPR does not exist, aborts
+    """
+    import numpy as np
+    import os.path, sys
+    # check, if path+fileMAG exists
+    if (os.path.isfile(path+fileGPR)==False):
+        print ('File ',path+fileGPR,' does not exist, aborted')
+        sys.exit()
+    else:
+        # read all lines from geodyn5 file
+        f = open(path+fileGPR, 'r')
+        ertlines = f.readlines()
+        f.close()
+        # create ert data fields (easting, northing, elev/boug)
+        imeta=0; igprdata=0; i=0
+        datetime =[]
+        gpr = np.empty((0,6))
+        # go through lines, separate meta-data from data, fill fields
+        for line in ertlines:
+            # Get next line from file
+            if (line[0] == '!'):
+                imeta += 1
+                #print(line.split())
+            else:
+                i += 1
+                if (i%iskip == 0):
+                    igprdata += 1
+                    add  = np.array([[float(line.split()[1]),
+                                    float(line.split()[2]),
+                                    float(line.split()[3]),
+                                    float(line.split()[4]),
+                                    float(line.split()[5]),
+                                    float(line.split()[6])+xoffset]])
+                    gpr = np.append(gpr,add,axis=0)
+                    datetime.append(line.split()[0])
+        # control output
+        if (control):
+            print('Number of meta-data lines: ',imeta)
+            print('Number of gpr lines:       ',igprdata)
+            print('min/max elevation:         ',gpr[:,2].min(),gpr[:,2].max())
+            print('min/max offset:            ',gpr[:,3].min(),gpr[:,3].max())
+            print('min/max amplitude:         ',gpr[:,4].min(),gpr[:,4].max())
+            print('min/max amplitude scaled:  ',gpr[:,4].min()/scale,gpr[:,4].max()/scale)
+            print('min/max profile:           ',gpr[:,5].min(),gpr[:,5].max())
+        # triangulation points
+        points = np.zeros(gpr.shape[0]*2).reshape(gpr.shape[0],2)
+        for i in range(gpr.shape[0]):
+            points[i][0] = gpr[i,5]
+            points[i][1] = gpr[i,3]
+        # Delaunay triangulation 
+        tri = scipy.spatial.Delaunay(points)
+# plot profile
+        if (plot):
+            fig,ax1 = plt.subplots(1,1,figsize=(12.0, 4.0))
+            ax1.set_xlabel('Profile distance [m]')
+            ax1.set_ylabel('Elevation [m]')
+            ax1.set_title('GPR profile: '+fileGPR)
+            if (reversed):
+                ax1.set_xlim([gpr[:,5].max(),gpr[:,5].min()])
+            else:
+                ax1.set_xlim([gpr[:,5].min(),gpr[:,5].max()])
+            ax1.set_ylim([gpr[:,2].min()+gpr[:,3].min(),gpr[:,2].max()])
+
+            sorted = np.argsort(gpr[:,5])
+            ax1.plot(gpr[sorted,5],gpr[sorted,2],linewidth=4,color='black')
+            #contour1=plt.tricontour(points[:,0], points[:,1]+gpr[:,2], tri.simplices,gpr[:,4],
+            #                        levels=[10,20,50,100,200,500,1000,2000],
+            #                        colors='black',alpha=0.5,linewidths=1)
+            #ax1.clabel(contour1,colors='black',inline=True,fmt='{:.0f}'.format)
+            im1 = plt.tripcolor(points[:,0], points[:,1]+gpr[:,2], tri.simplices,gpr[:,4]/scale, shading='gouraud',
+                                cmap = plt.get_cmap('seismic'),vmin=-10,vmax=10)
+            cbar1=fig.colorbar(im1,ax=ax1,shrink=0.9,ticks=[-10,10])
+            cbar1.set_label('Reflectivity [-]', rotation=90)
+        return gpr,points,tri
 
 #================================#
 def createERTCoordElevation(nameERT,nElectrodes,sElectrodes,GPSPoints,easting,northing,elevation,path='./',control=False,plot=False):
@@ -470,13 +581,31 @@ def createERTCoordElevation(nameERT,nElectrodes,sElectrodes,GPSPoints,easting,no
     print('nameERT:                   ',nameERT)
     print('nElectrodes:               ',nElectrodes)
     print('sElectrodes:               ',sElectrodes)
+    lProfile    = (nElectrodes-1)*sElectrodes
+    print('Profile length:            ',lProfile,' m')
     # calculate linear distance between GPS points
-    GPSDistance = np.zeros(len(GPSPoints[0]))
-    sProfile    = (nElectrodes-1)*sElectrodes
-    print('GPS points:                ',len(GPSPoints[0]))
-    print('Profile length:            ',sProfile,' m')
-    for i in range(1,len(GPSDistance)):
-        GPSDistance[i] = np.sqrt((GPSPoints[i-1][0]-GPSPoints[i][0])**2 + (GPSPoints[i-1][1]-GPSPoints[i][1])**2)
+    GPSDistance = np.zeros(GPSPoints.shape[0])
+    print('GPS points:                ',GPSPoints.shape[0])
+    GPSDistance = np.zeros(GPSPoints.shape[0])
+    for i in range(1,GPSDistance.shape[0]):
+        GPSDistance[i] = GPSDistance[i-1] + np.sqrt((GPSPoints[i-1][0]-GPSPoints[i][0])**2 + (GPSPoints[i-1][1]-GPSPoints[i][1])**2)
+    print('GPSDistance:               ',GPSDistance[-1])
+    # if last GPSPoints point results in shorter GPSDistance < lProfile
+    # then extrapolate last GPSPoints 
+    if (lProfile > GPSDistance[-1]):
+        dx = GPSPoints[-1,0] - GPSPoints[-2,0]
+        dy = GPSPoints[-1,1] - GPSPoints[-2,1]
+        radius = np.sqrt(dx**2 + dy**2)
+        alpha  = np.arctan2(dy,dx)
+        radius += (lProfile-GPSDistance[-1])
+        GPSPoints[-1,0] = GPSPoints[-2,0] + radius * np.cos(alpha)
+        GPSPoints[-1,1] = GPSPoints[-2,1] + radius * np.sin(alpha)
+        print('extrapolate last point')
+        print(GPSPoints)
+        for i in range(1,GPSDistance.shape[0]):
+            GPSDistance[i] = GPSDistance[i-1] + np.sqrt((GPSPoints[i-1][0]-GPSPoints[i][0])**2 + (GPSPoints[i-1][1]-GPSPoints[i][1])**2)
+        print('GPSDistance:               ',GPSDistance[-1])
+        #sys.exit('')
     # calculate electrode distance and positions 
     elecPoints   = np.zeros([nElectrodes,4])
     for i in range(nElectrodes):
@@ -501,18 +630,19 @@ def createERTCoordElevation(nameERT,nElectrodes,sElectrodes,GPSPoints,easting,no
         # plot map view for profile
         axs[0].set_title('ERT profile: '+nameERT)
         axs[0].set_aspect('equal')
-        axs[0].set_xlim([elecPoints[:,0].min()-10,elecPoints[:,0].max()+10])
-        axs[0].set_ylim([elecPoints[:,1].min()-10,elecPoints[:,1].max()+10])
+        axs[0].set_xlim([elecPoints[:,0].min()-100,elecPoints[:,0].max()+100])
+        axs[0].set_ylim([elecPoints[:,1].min()-100,elecPoints[:,1].max()+100])
         axs[0].set_xlabel('Easting [m]')
         axs[0].set_ylabel('Northing [m]')
-        axs[0].plot(elecPoints[:,0],elecPoints[:,1],lw=2,marker='o',color='blue')
-        axs[0].plot(GPSPoints[:,0],GPSPoints[:,1],lw=0,marker='x',color='red')
+        axs[0].tricontourf(easting,northing,elevation)
+        axs[0].plot(elecPoints[:,0],elecPoints[:,1],lw=2,marker='o',markersize=3,color='blue')
+        axs[0].plot(GPSPoints[:,0],GPSPoints[:,1],lw=0,marker='x',markersize=7,color='red')
         # plot elevation of profile
-        axs[1].set_xlim([0,sProfile])
+        axs[1].set_xlim([0,lProfile])
         axs[1].set_ylim([elecPoints[:,2].min(),elecPoints[:,2].max()])
         axs[1].set_xlabel('Profile [m]')
         axs[1].set_ylabel('Elevation [m]')
-        axs[1].plot(elecPoints[:,3],elecPoints[:,2],lw=2,marker='o',color='blue')
+        axs[1].plot(elecPoints[:,3],elecPoints[:,2],lw=2,marker='o',markersize=3,color='blue')
     return elecPoints
 
 #================================#
@@ -578,10 +708,27 @@ def createGPRCoordElevation(nameGPR,lProfile,sProfile,GPSPoints,easting,northing
     print('nTraces:                   ',nTraces)
     print('traceInc:                  ',traceInc)
     # calculate linear distance between GPS points
-    GPSDistance = np.zeros(len(GPSPoints[0]))
-    print('GPS points:                ',len(GPSPoints[0]))
-    for i in range(1,len(GPSDistance)):
-        GPSDistance[i] = np.sqrt((GPSPoints[i-1][0]-GPSPoints[i][0])**2 + (GPSPoints[i-1][1]-GPSPoints[i][1])**2)
+    print('GPS points:                ',GPSPoints.shape[0])
+    GPSDistance = np.zeros(GPSPoints.shape[0])
+    for i in range(1,GPSDistance.shape[0]):
+        GPSDistance[i] = GPSDistance[i-1] + np.sqrt((GPSPoints[i-1][0]-GPSPoints[i][0])**2 + (GPSPoints[i-1][1]-GPSPoints[i][1])**2)
+    print('GPSDistance:               ',GPSDistance[-1])
+    # if last GPSPoints point results in shorter GPSDistance < lProfile
+    # then extrapolate last GPSPoints 
+    if (lProfile > GPSDistance[-1]):
+        dx = GPSPoints[-1,0] - GPSPoints[-2,0]
+        dy = GPSPoints[-1,1] - GPSPoints[-2,1]
+        radius = np.sqrt(dx**2 + dy**2)
+        alpha  = np.arctan2(dy,dx)
+        radius += (lProfile-GPSDistance[-1])
+        GPSPoints[-1,0] = GPSPoints[-2,0] + radius * np.cos(alpha)
+        GPSPoints[-1,1] = GPSPoints[-2,1] + radius * np.sin(alpha)
+        print('extrapolate last point')
+        print(GPSPoints)
+        for i in range(1,GPSDistance.shape[0]):
+            GPSDistance[i] = GPSDistance[i-1] + np.sqrt((GPSPoints[i-1][0]-GPSPoints[i][0])**2 + (GPSPoints[i-1][1]-GPSPoints[i][1])**2)
+        print('GPSDistance:               ',GPSDistance[-1])
+        #sys.exit('')
     # calculate electrode distance and positions 
     gprPoints   = np.zeros([nTraces,4])
     for i in range(nTraces):
@@ -606,12 +753,13 @@ def createGPRCoordElevation(nameGPR,lProfile,sProfile,GPSPoints,easting,northing
         # plot map view for profile
         axs[0].set_title('GPR profile: '+nameGPR)
         axs[0].set_aspect('equal')
-        axs[0].set_xlim([gprPoints[:,0].min()-10,gprPoints[:,0].max()+10])
-        axs[0].set_ylim([gprPoints[:,1].min()-10,gprPoints[:,1].max()+10])
+        axs[0].set_xlim([gprPoints[:,0].min()-100,gprPoints[:,0].max()+100])
+        axs[0].set_ylim([gprPoints[:,1].min()-100,gprPoints[:,1].max()+100])
         axs[0].set_xlabel('Easting [m]')
         axs[0].set_ylabel('Northing [m]')
+        axs[0].tricontourf(easting,northing,elevation)
         axs[0].plot(gprPoints[:,0],gprPoints[:,1],lw=2,marker='o',markersize=3,color='blue')
-        axs[0].plot(GPSPoints[:,0],GPSPoints[:,1],lw=0,marker='x',color='red')
+        axs[0].plot(GPSPoints[:,0],GPSPoints[:,1],lw=0,marker='x',markersize=7,color='red')
         # plot elevation of profile
         axs[1].set_xlim([0,lProfile])
         axs[1].set_ylim([gprPoints[:,2].min(),gprPoints[:,2].max()])
