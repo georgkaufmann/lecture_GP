@@ -1,6 +1,0 @@
-#!/bin/bash
-filename="Campus"
-grep -v ! $filename.xyz | awk '{print $1,$2,$3}' | sort -k2 -n -k1 > $filename.csv
-gdal_translate -a_srs EPSG:32633 -of "GTiff" $filename.csv $filename.tif
-gdalinfo $filename.tif
-rm $filename.csv
