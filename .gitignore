@@ -4,6 +4,8 @@ Untitled*.ipynb
 *noshow.ipynb
 gis/
 test/
-DEL/
+tmp/
 download/
+data/FUGeocampus/FUGeocampus_topo_*
+data/FUGeocampus/FUGeocampus.qgz
 !data/*.xy
